@@ -1,0 +1,46 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Environment
+.env
+.venv
+env/
+venv/
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Uploads
+uploads/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Replit
+.replit
+replit.md
+.local/
+
+# Lock files
+uv.lock
+
+# Temporary files
+attached_assets/
+
+# Debug/test scripts
+check_db.py
+check_main_db.py
+fix_persistence.py
+test_api.py
+test_todo_persistence.py
+TODO_PERSISTENCE_FIX.md

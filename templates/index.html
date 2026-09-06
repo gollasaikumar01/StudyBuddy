@@ -1,0 +1,1297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StudyBuddy</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .main-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .section-card {
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 25px;
+            padding: 25px;
+        }
+        .hidden {
+            display: none !important;
+        }
+        .chat-message {
+            margin-bottom: 15px;
+            padding: 10px;
+            border-radius: 8px;
+        }
+        .chat-question {
+            background-color: #e3f2fd;
+            text-align: right;
+        }
+        .chat-answer {
+            background-color: #f5f5f5;
+        }
+        .quiz-option {
+            margin: 10px 0;
+        }
+        .quiz-option.correct {
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+        }
+        .quiz-option.incorrect {
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+        }
+        .recommendation-item {
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        .recommendation-item.video {
+            border-left: 4px solid #ff0000;
+            background-color: #fff5f5;
+        }
+        .recommendation-item.search {
+            border-left: 4px solid #ffa500;
+            background-color: #fffaf0;
+        }
+        .todo-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            margin: 5px 0;
+        }
+        .todo-item.high-priority {
+            border-left: 4px solid #dc3545;
+            background-color: #fff5f5;
+        }
+        .todo-item.medium-priority {
+            border-left: 4px solid #ffc107;
+            background-color: #fffbf0;
+        }
+        .todo-item.low-priority {
+            border-left: 4px solid #28a745;
+            background-color: #f8fff8;
+        }
+        .todo-completed {
+            text-decoration: line-through;
+            opacity: 0.6;
+        }
+        .ai-provider-selector {
+            margin-bottom: 15px;
+        }
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+        .status-message {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 6px;
+        }
+        .status-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .reminder-alert {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            max-width: 300px;
+        }
+        .quiz-attempt-badge {
+            background: linear-gradient(45deg, #007bff, #0056b3);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.8em;
+            margin-bottom: 10px;
+            display: inline-block;
+        }
+        .score-badge {
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        .score-excellent { background-color: #d4edda; color: #155724; }
+        .score-good { background-color: #fff3cd; color: #856404; }
+        .score-needs-improvement { background-color: #f8d7da; color: #721c24; }
+        .user-stats {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        .stat-item {
+            background: #f8f9fa;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <div class="main-container">
+        <!-- Reminder Alert (Hidden by default) -->
+        <div id="reminder-alert" class="reminder-alert alert alert-warning alert-dismissible fade show hidden" role="alert">
+            <strong>📝 Study Reminder!</strong>
+            <div id="reminder-message"></div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <!-- Header -->
+        <div class="section-card text-center">
+            <h1><i class="fas fa-graduation-cap"></i> StudyBuddy</h1>
+            <p class="lead">Your intelligent study companion powered by Google Gemini AI</p>
+        </div>
+
+        <!-- Login/Register Section -->
+        <div id="login-section" class="section-card">
+            <!-- Toggle buttons -->
+            <div class="text-center mb-4">
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-outline-primary active" id="login-tab" onclick="showLoginForm()">
+                        <i class="fas fa-sign-in-alt"></i> Login
+                    </button>
+                    <button type="button" class="btn btn-outline-success" id="register-tab" onclick="showRegisterForm()">
+                        <i class="fas fa-user-plus"></i> Register
+                    </button>
+                </div>
+            </div>
+
+            <!-- Login Form -->
+            <div id="login-form">
+                <h3><i class="fas fa-sign-in-alt"></i> Login</h3>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email:</label>
+                            <input type="email" class="form-control" id="email" placeholder="student@test.com">
+                        </div>
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Password:</label>
+                            <input type="password" class="form-control" id="password" placeholder="password123">
+                        </div>
+                        <button onclick="login()" class="btn btn-primary">
+                            <i class="fas fa-sign-in-alt"></i> Login
+                        </button>
+                    </div>
+                </div>
+                <div id="login-status"></div>
+            </div>
+
+            <!-- Registration Form -->
+            <div id="register-form" class="hidden">
+                <h3><i class="fas fa-user-plus"></i> Create Account</h3>
+                <div class="row">
+                    <div class="col-md-8">
+                        <div class="mb-3">
+                            <label for="reg-name" class="form-label">Full Name:</label>
+                            <input type="text" class="form-control" id="reg-name" placeholder="John Doe">
+                        </div>
+                        <div class="mb-3">
+                            <label for="reg-email" class="form-label">Email:</label>
+                            <input type="email" class="form-control" id="reg-email" placeholder="your@email.com">
+                        </div>
+                        <div class="mb-3">
+                            <label for="reg-password" class="form-label">Password:</label>
+                            <input type="password" class="form-control" id="reg-password" placeholder="At least 6 characters">
+                        </div>
+                        <div class="mb-3">
+                            <label for="reg-confirm-password" class="form-label">Confirm Password:</label>
+                            <input type="password" class="form-control" id="reg-confirm-password" placeholder="Repeat your password">
+                        </div>
+                        <button onclick="register()" class="btn btn-success">
+                            <i class="fas fa-user-plus"></i> Create Account
+                        </button>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="alert alert-success">
+                            <strong>Join the Platform!</strong><br>
+                            • Upload and study PDFs<br>
+                            • AI-powered summaries<br>
+                            • Interactive quizzes<br>
+                            • Smart recommendations<br>
+                            • Personal todo lists
+                        </div>
+                    </div>
+                </div>
+                <div id="register-status"></div>
+            </div>
+        </div>
+
+        <!-- Main Platform (Hidden until login) -->
+        <div id="main-platform" class="hidden">
+            <!-- User Info -->
+            <div class="section-card">
+                <h4>Welcome, <span id="user-name"></span>!</h4>
+                <button onclick="logout()" class="btn btn-outline-secondary btn-sm">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </button>
+                <div id="user-stats" class="mt-3"></div>
+            </div>
+
+            <!-- AI Provider Selection -->
+            <div class="section-card">
+                <h5><i class="fas fa-robot"></i> AI Provider</h5>
+                <div class="ai-provider-selector">
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="ai-provider" id="gemini" value="gemini" checked>
+                        <label class="form-check-label" for="gemini">
+                            <i class="fas fa-gem"></i> Google Gemini 2.5 Flash
+                        </label>
+                    </div>
+                    <p class="text-muted mt-2">Powered by Google's advanced Gemini AI for intelligent learning assistance</p>
+                </div>
+            </div>
+
+            <!-- Upload PDF Section -->
+            <div class="section-card">
+                <h3><i class="fas fa-file-pdf"></i> Step 1: Upload Study Material</h3>
+                <div class="alert alert-info">
+                    <strong>📚 How to get started:</strong><br>
+                    1. Choose a PDF file containing your study material<br>
+                    2. Click "Upload PDF" to process the document<br>
+                    3. Once uploaded, you can generate summaries and quizzes!
+                </div>
+                <div class="mb-3">
+                    <input type="file" class="form-control" id="pdf-file" accept=".pdf">
+                    <div class="form-text">Select a PDF file (textbooks, notes, articles, etc.)</div>
+                </div>
+                <button onclick="uploadFile()" class="btn btn-success">
+                    <i class="fas fa-upload"></i> Upload PDF
+                </button>
+                <div id="upload-status"></div>
+                <div id="file-preview" class="mt-3"></div>
+            </div>
+
+            <!-- Summary Section -->
+            <div class="section-card">
+                <h3><i class="fas fa-file-text"></i> Step 2: Get AI Summary</h3>
+                <div class="alert alert-warning">
+                    <strong>💡 What is this?</strong><br>
+                    The AI will read your PDF and create a structured summary with key points, making it easier to understand and study the material.
+                </div>
+                <button onclick="requestSummary()" class="btn btn-info" id="summary-btn" disabled>
+                    <i class="fas fa-magic"></i> Generate Summary
+                </button>
+                <div class="form-text">Upload a PDF first to enable this feature</div>
+                <div id="summary-content" class="mt-3"></div>
+            </div>
+
+            <!-- Chat Section -->
+            <div class="section-card">
+                <h3><i class="fas fa-comments"></i> Ask Questions</h3>
+                <div class="input-group mb-3">
+                    <input type="text" class="form-control" id="chat-input" placeholder="Ask a question about your study material..." onkeypress="handleChatEnter(event)">
+                    <button onclick="askQuestion()" class="btn btn-primary">
+                        <i class="fas fa-paper-plane"></i> Ask
+                    </button>
+                    <button onclick="clearChatHistory()" class="btn btn-outline-danger">
+                        <i class="fas fa-trash"></i> Clear Chat
+                    </button>
+                </div>
+                <div id="chat-history"></div>
+            </div>
+
+            <!-- Quiz Section -->
+            <div class="section-card">
+                <h3><i class="fas fa-question-circle"></i> Step 3: Test Your Knowledge</h3>
+                <div class="alert alert-success">
+                    <strong>🧠 Quiz Features:</strong><br>
+                    • AI generates questions based on your PDF content<br>
+                    • Each retry creates completely new questions<br>
+                    • Get detailed explanations for every answer<br>
+                    • Track your progress and improvement over time
+                </div>
+                <div id="quiz-attempt-info"></div>
+                <div class="mb-3">
+                    <label for="num-questions" class="form-label">Number of Questions:</label>
+                    <select class="form-select" id="num-questions">
+                        <option value="3">3 Questions (Quick Test)</option>
+                        <option value="5" selected>5 Questions (Recommended)</option>
+                        <option value="10">10 Questions (Comprehensive)</option>
+                    </select>
+                </div>
+                <button onclick="generateQuiz()" class="btn btn-warning" id="quiz-btn" disabled>
+                    <i class="fas fa-clipboard-question"></i> Generate Quiz
+                </button>
+                <div class="form-text">Upload a PDF first to enable quiz generation</div>
+                <div id="quiz-content" class="mt-3"></div>
+            </div>
+
+            <!-- Recommendations Section -->
+            <div class="section-card">
+                <h3><i class="fas fa-lightbulb"></i> Get Smart Recommendations</h3>
+                <div class="alert alert-info">
+                    <strong>🎯 Smart Features:</strong><br>
+                    • Get recommendations based on your quiz performance<br>
+                    • Context-aware suggestions from your uploaded PDF<br>
+                    • Personalized learning resources for improvement
+                </div>
+                <div class="input-group mb-3">
+                    <input type="text" class="form-control" id="topic-input" placeholder="Enter topic or leave blank for PDF-based recommendations...">
+                    <button onclick="getRecommendations()" class="btn btn-success">
+                        <i class="fas fa-search"></i> Get Smart Recommendations
+                    </button>
+                </div>
+                <div id="recommendations-content"></div>
+            </div>
+
+            <!-- Todo List Section -->
+            <div class="section-card">
+                <h3><i class="fas fa-tasks"></i> Study Todo List</h3>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <input type="text" class="form-control" id="todo-input" placeholder="Add a new study task..." onkeypress="handleTodoEnter(event)">
+                    </div>
+                    <div class="col-md-2">
+                        <select class="form-select" id="todo-priority">
+                            <option value="low">Low</option>
+                            <option value="medium" selected>Medium</option>
+                            <option value="high">High</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <button onclick="addTodo()" class="btn btn-primary w-100">
+                            <i class="fas fa-plus"></i> Add
+                        </button>
+                    </div>
+                    <div class="col-md-2">
+                        <button onclick="clearAllTodos()" class="btn btn-outline-danger w-100">
+                            <i class="fas fa-trash-alt"></i> Clear All
+                        </button>
+                    </div>
+                </div>
+                <div id="todo-list"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Global variables
+        let sessionId = null;
+        let currentFileId = null;
+        let currentQuizId = null;
+        let currentQuestionIndex = 0;
+        let reminderInterval = null;
+        let currentQuiz = null;
+
+        // Utility functions
+        function showStatus(elementId, message, isSuccess = true) {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `<div class="status-message ${isSuccess ? 'status-success' : 'status-error'}">${message}</div>`;
+        }
+
+        function getSelectedAI() {
+            return document.querySelector('input[name="ai-provider"]:checked').value;
+        }
+
+        function makeRequest(url, options = {}) {
+            if (sessionId) {
+                options.headers = {
+                    ...options.headers,
+                    'Session-ID': sessionId
+                };
+            }
+            return fetch(url, options);
+        }
+
+        function showReminder(message) {
+            const reminderAlert = document.getElementById('reminder-alert');
+            const reminderMessage = document.getElementById('reminder-message');
+            
+            reminderMessage.textContent = message;
+            reminderAlert.classList.remove('hidden');
+            
+            // Auto-hide after 10 seconds
+            setTimeout(() => {
+                reminderAlert.classList.add('hidden');
+            }, 10000);
+        }
+
+        function startReminderCheck() {
+            // Check for reminders every hour (3600000ms)
+            reminderInterval = setInterval(async () => {
+                try {
+                    const response = await makeRequest('/reminder-check');
+                    const data = await response.json();
+                    
+                    if (data.success && data.has_reminder) {
+                        showReminder(data.message);
+                    }
+                } catch (error) {
+                    console.error('Reminder check failed:', error);
+                }
+            }, 3600000); // 1 hour in milliseconds
+        }
+
+        function stopReminderCheck() {
+            if (reminderInterval) {
+                clearInterval(reminderInterval);
+                reminderInterval = null;
+            }
+        }
+
+        // Enhanced enter key handlers
+        function handleChatEnter(event) {
+            if (event.key === 'Enter') {
+                askQuestion();
+            }
+        }
+
+        function handleTodoEnter(event) {
+            if (event.key === 'Enter') {
+                addTodo();
+            }
+        }
+
+        // Login functionality
+        async function login() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            if (!email || !password) {
+                showStatus('login-status', 'Please enter both email and password', false);
+                return;
+            }
+
+            try {
+                const response = await fetch('/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    sessionId = data.session_id;
+                    document.getElementById('user-name').textContent = data.user;
+                    document.getElementById('login-section').classList.add('hidden');
+                    document.getElementById('main-platform').classList.remove('hidden');
+                    loadTodos();
+                    startReminderCheck();
+                    updateUserStats();
+                } else {
+                    showStatus('login-status', data.message, false);
+                }
+            } catch (error) {
+                showStatus('login-status', 'Login failed: ' + error.message, false);
+            }
+        }
+
+        function logout() {
+            sessionId = null;
+            currentFileId = null;
+            stopReminderCheck();
+            document.getElementById('login-section').classList.remove('hidden');
+            document.getElementById('main-platform').classList.add('hidden');
+            document.getElementById('email').value = '';
+            document.getElementById('password').value = '';
+            showStatus('login-status', '');
+            showLoginForm();
+        }
+
+        // Registration functionality
+        async function register() {
+            const name = document.getElementById('reg-name').value.trim();
+            const email = document.getElementById('reg-email').value.trim();
+            const password = document.getElementById('reg-password').value;
+            const confirmPassword = document.getElementById('reg-confirm-password').value;
+
+            if (!name || !email || !password || !confirmPassword) {
+                showStatus('register-status', 'Please fill in all fields', false);
+                return;
+            }
+
+            if (password !== confirmPassword) {
+                showStatus('register-status', 'Passwords do not match', false);
+                return;
+            }
+
+            try {
+                const response = await fetch('/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: name,
+                        email: email,
+                        password: password,
+                        confirm_password: confirmPassword
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    showStatus('register-status', data.message, true);
+                    // Clear form and switch to login
+                    document.getElementById('reg-name').value = '';
+                    document.getElementById('reg-email').value = '';
+                    document.getElementById('reg-password').value = '';
+                    document.getElementById('reg-confirm-password').value = '';
+                    // Auto-fill login form with new user's email
+                    document.getElementById('email').value = email;
+                    // Switch to login form after 2 seconds
+                    setTimeout(() => {
+                        showLoginForm();
+                        showStatus('login-status', 'You can now login with your new account!', true);
+                    }, 2000);
+                } else {
+                    showStatus('register-status', data.message, false);
+                }
+            } catch (error) {
+                showStatus('register-status', 'Registration failed: ' + error.message, false);
+            }
+        }
+
+        // Form toggle functionality
+        function showLoginForm() {
+            document.getElementById('login-form').classList.remove('hidden');
+            document.getElementById('register-form').classList.add('hidden');
+            document.getElementById('login-tab').classList.add('active');
+            document.getElementById('register-tab').classList.remove('active');
+            showStatus('register-status', '');
+        }
+
+        function showRegisterForm() {
+            document.getElementById('login-form').classList.add('hidden');
+            document.getElementById('register-form').classList.remove('hidden');
+            document.getElementById('login-tab').classList.remove('active');
+            document.getElementById('register-tab').classList.add('active');
+            showStatus('login-status', '');
+        }
+
+        // File upload functionality
+        async function uploadFile() {
+            const fileInput = document.getElementById('pdf-file');
+            const file = fileInput.files[0];
+
+            if (!file) {
+                showStatus('upload-status', 'Please select a PDF file', false);
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const response = await makeRequest('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    currentFileId = data.file_id;
+                    showStatus('upload-status', data.message, true);
+                    document.getElementById('file-preview').innerHTML = 
+                        `<div class="alert alert-info"><strong>Preview:</strong><br>${data.text_preview}</div>`;
+                    
+                    // Enable summary and quiz buttons
+                    document.getElementById('summary-btn').disabled = false;
+                    document.getElementById('quiz-btn').disabled = false;
+                    
+                    // Clear quiz attempt info for new file
+                    document.getElementById('quiz-attempt-info').innerHTML = '';
+                } else {
+                    showStatus('upload-status', data.message, false);
+                }
+            } catch (error) {
+                showStatus('upload-status', 'Upload failed: ' + error.message, false);
+            }
+        }
+
+        // Summary functionality
+        async function requestSummary() {
+            if (!currentFileId) {
+                showStatus('summary-content', 'Please upload a PDF first', false);
+                return;
+            }
+
+            const summaryBtn = document.getElementById('summary-btn');
+            summaryBtn.classList.add('loading');
+            summaryBtn.textContent = 'Generating...';
+
+            try {
+                const response = await makeRequest('/summary', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        file_id: currentFileId,
+                        ai_provider: getSelectedAI()
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    document.getElementById('summary-content').innerHTML = 
+                        `<div class="alert alert-success">
+                            <strong>Summary (${data.ai_provider.toUpperCase()}):</strong><br>
+                            ${data.summary}
+                        </div>`;
+                } else {
+                    showStatus('summary-content', data.message, false);
+                }
+            } catch (error) {
+                showStatus('summary-content', 'Summary failed: ' + error.message, false);
+            } finally {
+                summaryBtn.classList.remove('loading');
+                summaryBtn.innerHTML = '<i class="fas fa-magic"></i> Generate Summary';
+            }
+        }
+
+        // Chat functionality
+        async function askQuestion() {
+            const question = document.getElementById('chat-input').value.trim();
+            if (!question) return;
+
+            const chatHistory = document.getElementById('chat-history');
+            
+            // Add question to chat
+            chatHistory.innerHTML += 
+                `<div class="chat-message chat-question">
+                    <strong>You:</strong> ${question}
+                </div>`;
+
+            document.getElementById('chat-input').value = '';
+
+            try {
+                const response = await makeRequest('/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        question,
+                        ai_provider: getSelectedAI(),
+                        file_id: currentFileId
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    chatHistory.innerHTML += 
+                        `<div class="chat-message chat-answer">
+                            <strong>AI (${data.ai_provider.toUpperCase()}):</strong> ${data.answer}
+                        </div>`;
+                } else {
+                    chatHistory.innerHTML += 
+                        `<div class="chat-message chat-answer status-error">
+                            <strong>Error:</strong> ${data.message}
+                        </div>`;
+                }
+            } catch (error) {
+                chatHistory.innerHTML += 
+                    `<div class="chat-message chat-answer status-error">
+                        <strong>Error:</strong> ${error.message}
+                    </div>`;
+            }
+
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+        }
+
+        // Enhanced Quiz functionality with all questions displayed first
+        let userAnswers = []; // Store user's answers locally
+
+        async function generateQuiz() {
+            if (!currentFileId) {
+                showStatus('quiz-content', '⚠️ Please upload a PDF file first to generate quiz questions!', false);
+                return;
+            }
+
+            const quizBtn = document.getElementById('quiz-btn');
+            quizBtn.classList.add('loading');
+            quizBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating Quiz...';
+
+            try {
+                const response = await makeRequest('/quiz', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        file_id: currentFileId,
+                        ai_provider: getSelectedAI(),
+                        num_questions: parseInt(document.getElementById('num-questions').value)
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    currentQuiz = data;
+                    currentQuizId = data.quiz_id;
+                    userAnswers = new Array(data.questions.length).fill(null); // Initialize answers array
+                    
+                    // Show attempt information
+                    const attemptInfo = document.getElementById('quiz-attempt-info');
+                    attemptInfo.innerHTML = `
+                        <div class="quiz-attempt-badge">
+                            <i class="fas fa-redo"></i> Quiz Attempt #${data.attempt_number}
+                            ${data.attempt_number > 1 ? '(Fresh Questions Generated!)' : '(First Attempt)'}
+                        </div>`;
+                    
+                    displayAllQuestions(data.questions);
+                } else {
+                    showStatus('quiz-content', '❌ ' + data.message, false);
+                }
+            } catch (error) {
+                showStatus('quiz-content', '❌ Quiz generation failed: ' + error.message, false);
+            } finally {
+                quizBtn.classList.remove('loading');
+                quizBtn.innerHTML = '<i class="fas fa-clipboard-question"></i> Generate Quiz';
+            }
+        }
+
+        function displayAllQuestions(questions) {
+            const quizContent = document.getElementById('quiz-content');
+            
+            let quizHtml = `
+                <div class="alert alert-info">
+                    <h5><i class="fas fa-clipboard-question"></i> Complete Quiz</h5>
+                    <p>Answer all ${questions.length} questions below, then submit to see your results.</p>
+                </div>`;
+
+            questions.forEach((question, questionIndex) => {
+                quizHtml += `
+                    <div class="card mb-3" id="question-${questionIndex}">
+                        <div class="card-header">
+                            <strong>Question ${questionIndex + 1}:</strong> ${question.question}
+                        </div>
+                        <div class="card-body">
+                            <div class="quiz-options" id="options-${questionIndex}">
+                                ${question.options.map((option, optionIndex) => {
+                                    const optionLetter = option.charAt(0);
+                                    return `
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input" type="radio" 
+                                                   name="question-${questionIndex}" 
+                                                   id="q${questionIndex}-${optionLetter}" 
+                                                   value="${optionLetter}"
+                                                   onchange="selectAnswer(${questionIndex}, '${optionLetter}')">
+                                            <label class="form-check-label" for="q${questionIndex}-${optionLetter}">
+                                                ${option}
+                                            </label>
+                                        </div>`;
+                                }).join('')}
+                            </div>
+                        </div>
+                    </div>`;
+            });
+
+            // Add submit button
+            quizHtml += `
+                <div class="text-center mt-4">
+                    <button id="submit-quiz-btn" class="btn btn-success btn-lg" onclick="submitQuiz()" disabled>
+                        <i class="fas fa-paper-plane"></i> Submit Quiz
+                    </button>
+                    <div class="mt-2">
+                        <small class="text-muted">
+                            <span id="answered-count">0</span>/${questions.length} questions answered
+                        </small>
+                    </div>
+                </div>`;
+
+            quizContent.innerHTML = quizHtml;
+        }
+
+        function selectAnswer(questionIndex, selectedAnswer) {
+            userAnswers[questionIndex] = selectedAnswer;
+            updateSubmitButton();
+        }
+
+        function updateSubmitButton() {
+            const answeredCount = userAnswers.filter(answer => answer !== null).length;
+            const totalQuestions = userAnswers.length;
+            
+            document.getElementById('answered-count').textContent = answeredCount;
+            
+            const submitBtn = document.getElementById('submit-quiz-btn');
+            if (answeredCount === totalQuestions) {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Submit Quiz';
+            } else {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = `<i class="fas fa-paper-plane"></i> Answer All Questions (${totalQuestions - answeredCount} remaining)`;
+            }
+        }
+
+        async function submitQuiz() {
+            if (userAnswers.some(answer => answer === null)) {
+                showStatus('quiz-content', 'Please answer all questions before submitting', false);
+                return;
+            }
+
+            const submitBtn = document.getElementById('submit-quiz-btn');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+
+            try {
+                // Submit all answers at once to the new endpoint
+                const response = await makeRequest('/quiz/submit', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        quiz_id: currentQuizId,
+                        answers: userAnswers
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // Display comprehensive results from the new endpoint
+                    displayQuizResults(data);
+                    updateUserStats();
+                } else {
+                    showStatus('quiz-content', data.message, false);
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Submit Quiz';
+                }
+
+            } catch (error) {
+                showStatus('quiz-content', 'Quiz submission failed: ' + error.message, false);
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Submit Quiz';
+            }
+        }
+
+        function displayQuizResults(data) {
+            const quizContent = document.getElementById('quiz-content');
+            const totalScore = data.total_score;
+            const totalQuestions = data.total_questions;
+            const scorePercentage = data.score_percentage;
+            const results = data.results;
+            const recommendations = data.recommendations;
+            
+            const scoreClass = scorePercentage >= 80 ? 'score-excellent' : 
+                             scorePercentage >= 60 ? 'score-good' : 'score-needs-improvement';
+
+            let resultsHtml = `
+                <div class="alert alert-success text-center">
+                    <h4><i class="fas fa-trophy"></i> Quiz Completed!</h4>
+                    <div class="score-badge ${scoreClass} fs-5">
+                        Final Score: ${totalScore}/${totalQuestions} (${scorePercentage.toFixed(1)}%)
+                    </div>
+                </div>`;
+
+            // Show detailed results for each question
+            results.forEach((result, index) => {
+                const isCorrect = result.is_correct;
+                
+                resultsHtml += `
+                    <div class="card mb-3 ${isCorrect ? 'border-success' : 'border-danger'}">
+                        <div class="card-header ${isCorrect ? 'bg-success text-white' : 'bg-danger text-white'}">
+                            <strong>Question ${index + 1}:</strong> ${result.question}
+                            <span class="float-end">
+                                <i class="fas ${isCorrect ? 'fa-check' : 'fa-times'}"></i>
+                                ${isCorrect ? 'Correct' : 'Incorrect'}
+                            </span>
+                        </div>
+                        <div class="card-body">
+                            <p><strong>Your Answer:</strong> ${result.user_answer}) ${result.options.find(opt => opt.startsWith(result.user_answer))}</p>
+                            ${!isCorrect ? `<p><strong>Correct Answer:</strong> ${result.correct_answer}) ${result.options.find(opt => opt.startsWith(result.correct_answer))}</p>` : ''}
+                            <div class="alert alert-info">
+                                <strong>Explanation:</strong> ${result.explanation}
+                            </div>
+                        </div>
+                    </div>`;
+            });
+
+            // Add server-generated performance-based recommendations
+            resultsHtml += `
+                <div class="alert alert-${recommendations.level === 'beginner' ? 'warning' : recommendations.level === 'intermediate' ? 'info' : 'success'}">
+                    <h5><i class="fas fa-${recommendations.level === 'beginner' ? 'exclamation-triangle' : recommendations.level === 'intermediate' ? 'graduation-cap' : 'star'}"></i> ${recommendations.level === 'beginner' ? 'Needs Improvement' : recommendations.level === 'intermediate' ? 'Good Progress!' : 'Excellent Work!'}</h5>
+                    <p>${recommendations.message}</p>
+                    <ul>
+                        ${recommendations.resources.map(resource => `
+                            <li><a href="${resource.url}" target="_blank">
+                                <i class="fas ${resource.type === 'video' ? 'fa-video' : 'fa-search'}"></i> ${resource.title}
+                            </a> - ${resource.description}</li>
+                        `).join('')}
+                    </ul>
+                </div>`;
+
+            // Add retry button
+            resultsHtml += `
+                <div class="text-center mt-4">
+                    <button class="btn btn-warning btn-lg" onclick="generateQuiz()">
+                        <i class="fas fa-redo"></i> Try Again (New Questions)
+                    </button>
+                </div>`;
+
+            quizContent.innerHTML = resultsHtml;
+        }
+
+
+        // Enhanced recommendations functionality
+        async function getRecommendations() {
+            const topic = document.getElementById('topic-input').value.trim();
+            const recommendationsContent = document.getElementById('recommendations-content');
+            
+            // Clear previous recommendations immediately
+            recommendationsContent.innerHTML = '<div class="text-center"><i class="fas fa-spinner fa-spin"></i> Loading smart recommendations...</div>';
+
+            try {
+                // Build URL with topic and file context
+                let url = `/recommendations?ai_provider=${getSelectedAI()}`;
+                if (topic) {
+                    url += `&topic=${encodeURIComponent(topic)}`;
+                }
+                // The backend will automatically use PDF context if no topic is provided
+
+                const response = await makeRequest(url);
+                const data = await response.json();
+
+                if (data.success) {
+                    let headerHtml = `<h5>${data.message}</h5>`;
+                    
+                    // Show context information
+                    if (data.has_pdf_context && data.pdf_filename) {
+                        headerHtml += `<div class="alert alert-info mb-3">
+                            <i class="fas fa-file-pdf"></i> Using context from: <strong>${data.pdf_filename}</strong>
+                        </div>`;
+                    }
+                    
+                    // Show quiz performance if available
+                    if (data.latest_quiz_score !== null) {
+                        const scoreClass = data.latest_quiz_score >= 80 ? 'score-excellent' : 
+                                         data.latest_quiz_score >= 60 ? 'score-good' : 'score-needs-improvement';
+                        headerHtml += `<div class="mb-3">
+                            <span class="score-badge ${scoreClass}">
+                                Latest Quiz: ${data.latest_quiz_score.toFixed(1)}%
+                            </span>
+                        </div>`;
+                    } else if (data.avg_quiz_score > 0) {
+                        const scoreClass = data.avg_quiz_score >= 80 ? 'score-excellent' : 
+                                         data.avg_quiz_score >= 60 ? 'score-good' : 'score-needs-improvement';
+                        headerHtml += `<div class="mb-3">
+                            <span class="score-badge ${scoreClass}">
+                                Average Score: ${data.avg_quiz_score.toFixed(1)}%
+                            </span>
+                        </div>`;
+                    }
+                    
+                    const recsHtml = data.recommendations.map(rec => {
+                        const typeClass = rec.type === 'video' ? 'video' : rec.type === 'search' ? 'search' : 'article';
+                        const iconClass = rec.type === 'video' ? 'fa-video' : rec.type === 'search' ? 'fa-search' : 'fa-article';
+                        
+                        return `<div class="recommendation-item ${typeClass}">
+                            <h6><i class="fas ${iconClass}"></i> ${rec.title}</h6>
+                            <p>${rec.description}</p>
+                            <a href="${rec.url}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-external-link-alt"></i> View
+                            </a>
+                        </div>`;
+                    }).join('');
+                    
+                    recommendationsContent.innerHTML = headerHtml + recsHtml;
+                } else {
+                    showStatus('recommendations-content', data.message, false);
+                }
+            } catch (error) {
+                showStatus('recommendations-content', 'Recommendations failed: ' + error.message, false);
+            }
+        }
+
+        // Enhanced todo functionality with priorities
+        async function addTodo() {
+            const task = document.getElementById('todo-input').value.trim();
+            const priority = document.getElementById('todo-priority').value;
+            
+            if (!task) return;
+
+            try {
+                const response = await makeRequest('/todo', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ task, priority })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    document.getElementById('todo-input').value = '';
+                    loadTodos();
+                } else {
+                    showStatus('todo-list', data.message, false);
+                }
+            } catch (error) {
+                showStatus('todo-list', 'Add todo failed: ' + error.message, false);
+            }
+        }
+
+        async function loadTodos() {
+            try {
+                const response = await makeRequest('/todo');
+                const data = await response.json();
+
+                if (data.success) {
+                    const todoList = document.getElementById('todo-list');
+                    
+                    if (data.todos.length === 0) {
+                        todoList.innerHTML = '<p class="text-muted">No tasks yet. Add one above!</p>';
+                        return;
+                    }
+
+                    const todoHtml = data.todos.map(todo => {
+                        const priorityClass = `${todo.priority}-priority`;
+                        const completedClass = todo.completed ? 'todo-completed' : '';
+                        const priorityIcon = todo.priority === 'high' ? 'fa-exclamation-triangle' : 
+                                           todo.priority === 'medium' ? 'fa-exclamation-circle' : 'fa-info-circle';
+                        
+                        return `<div class="todo-item ${priorityClass} ${completedClass}" id="todo-${todo.id}">
+                            <input type="checkbox" ${todo.completed ? 'checked' : ''} 
+                                   onchange="toggleTodo('${todo.id}', this.checked)" class="form-check-input me-2">
+                            <span class="flex-grow-1" id="task-text-${todo.id}" ondblclick="editTodo('${todo.id}')">${todo.task}</span>
+                            <input type="text" class="form-control flex-grow-1 me-2 hidden" id="task-edit-${todo.id}" 
+                                   value="${todo.task}" onblur="saveEdit('${todo.id}')" onkeypress="handleEditEnter(event, '${todo.id}')">
+                            
+                            <div class="todo-actions">
+                                <span class="badge bg-secondary me-2">
+                                    <i class="fas ${priorityIcon}"></i> ${todo.priority}
+                                </span>
+                                <button class="btn btn-sm btn-outline-primary me-1" onclick="editTodo('${todo.id}')" id="edit-btn-${todo.id}">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-sm btn-success me-1 hidden" onclick="saveEdit('${todo.id}')" id="save-btn-${todo.id}">
+                                    <i class="fas fa-check"></i>
+                                </button>
+                                <button class="btn btn-sm btn-secondary me-1 hidden" onclick="cancelEdit('${todo.id}')" id="cancel-btn-${todo.id}">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger" onclick="deleteTodo('${todo.id}')" id="delete-btn-${todo.id}">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>`;
+                    }).join('');
+                    
+                    todoList.innerHTML = todoHtml;
+
+                    // Show reminder if any
+                    if (data.reminder) {
+                        showReminder(data.reminder);
+                    }
+                } else {
+                    showStatus('todo-list', data.message, false);
+                }
+            } catch (error) {
+                showStatus('todo-list', 'Load todos failed: ' + error.message, false);
+            }
+        }
+
+        async function toggleTodo(id, completed) {
+            try {
+                const response = await makeRequest('/todo', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id, completed })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    loadTodos();
+                }
+            } catch (error) {
+                console.error('Toggle todo failed:', error);
+            }
+        }
+
+        async function deleteTodo(id) {
+            try {
+                const response = await makeRequest('/todo', {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    loadTodos();
+                }
+            } catch (error) {
+                console.error('Delete todo failed:', error);
+            }
+        }
+
+        function editTodo(id) {
+            // Switch to edit mode
+            const textSpan = document.getElementById(`task-text-${id}`);
+            const editInput = document.getElementById(`task-edit-${id}`);
+            const editBtn = document.getElementById(`edit-btn-${id}`);
+            const saveBtn = document.getElementById(`save-btn-${id}`);
+            const cancelBtn = document.getElementById(`cancel-btn-${id}`);
+            
+            textSpan.classList.add('hidden');
+            editInput.classList.remove('hidden');
+            editBtn.classList.add('hidden');
+            saveBtn.classList.remove('hidden');
+            cancelBtn.classList.remove('hidden');
+            
+            editInput.focus();
+            editInput.select();
+        }
+
+        async function saveEdit(id) {
+            const editInput = document.getElementById(`task-edit-${id}`);
+            const newTask = editInput.value.trim();
+            
+            if (!newTask) {
+                showStatus('todo-list', 'Task description cannot be empty', false);
+                return;
+            }
+            
+            try {
+                const response = await makeRequest('/todo', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        id: id,
+                        task: newTask
+                    })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    loadTodos(); // Refresh the todo list
+                } else {
+                    showStatus('todo-list', data.message, false);
+                }
+            } catch (error) {
+                showStatus('todo-list', 'Edit todo failed: ' + error.message, false);
+            }
+        }
+
+        function cancelEdit(id) {
+            // Switch back to view mode without saving
+            const textSpan = document.getElementById(`task-text-${id}`);
+            const editInput = document.getElementById(`task-edit-${id}`);
+            const editBtn = document.getElementById(`edit-btn-${id}`);
+            const saveBtn = document.getElementById(`save-btn-${id}`);
+            const cancelBtn = document.getElementById(`cancel-btn-${id}`);
+            
+            // Reset input to original value
+            editInput.value = textSpan.textContent;
+            
+            textSpan.classList.remove('hidden');
+            editInput.classList.add('hidden');
+            editBtn.classList.remove('hidden');
+            saveBtn.classList.add('hidden');
+            cancelBtn.classList.add('hidden');
+        }
+
+        function handleEditEnter(event, id) {
+            if (event.key === 'Enter') {
+                saveEdit(id);
+            } else if (event.key === 'Escape') {
+                cancelEdit(id);
+            }
+        }
+
+        // Clear functionality
+        function clearChatHistory() {
+            if (confirm('Are you sure you want to clear all chat history? This action cannot be undone.')) {
+                document.getElementById('chat-history').innerHTML = '';
+                showStatus('chat-history', '✅ Chat history cleared successfully!', true);
+                setTimeout(() => {
+                    document.getElementById('chat-history').innerHTML = '';
+                }, 2000);
+            }
+        }
+
+        async function clearAllTodos() {
+            if (!confirm('Are you sure you want to delete ALL todos? This action cannot be undone.')) {
+                return;
+            }
+
+            try {
+                // Get all todos first
+                const response = await makeRequest('/todo');
+                const data = await response.json();
+
+                if (data.success && data.todos.length > 0) {
+                    // Delete each todo
+                    const deletePromises = data.todos.map(todo => 
+                        makeRequest('/todo', {
+                            method: 'DELETE',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ id: todo.id })
+                        })
+                    );
+
+                    await Promise.all(deletePromises);
+                    
+                    // Reload todos to show empty list
+                    loadTodos();
+                    updateUserStats();
+                    
+                    showStatus('todo-list', '✅ All todos cleared successfully!', true);
+                    setTimeout(() => {
+                        loadTodos(); // Clear the status message
+                    }, 2000);
+                } else {
+                    showStatus('todo-list', 'No todos to clear', false);
+                }
+            } catch (error) {
+                showStatus('todo-list', 'Failed to clear todos: ' + error.message, false);
+            }
+        }
+
+        // User statistics
+        async function updateUserStats() {
+            try {
+                const response = await makeRequest('/user-stats');
+                const data = await response.json();
+
+                if (data.success) {
+                    const statsContainer = document.getElementById('user-stats');
+                    const stats = data.stats;
+                    
+                    statsContainer.innerHTML = `
+                        <div class="user-stats">
+                            <div class="stat-item">
+                                <i class="fas fa-file-upload"></i> Files: ${stats.files_uploaded}
+                            </div>
+                            <div class="stat-item">
+                                <i class="fas fa-comments"></i> Chats: ${stats.total_chats}
+                            </div>
+                            <div class="stat-item">
+                                <i class="fas fa-clipboard-question"></i> Quizzes: ${stats.quizzes_taken}
+                            </div>
+                            <div class="stat-item">
+                                <i class="fas fa-chart-line"></i> Avg Score: ${stats.avg_score}%
+                            </div>
+                            <div class="stat-item">
+                                <i class="fas fa-tasks"></i> Tasks: ${stats.total_todos}
+                            </div>
+                        </div>`;
+                }
+            } catch (error) {
+                console.error('Update stats failed:', error);
+            }
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Auto-focus on login email field
+            document.getElementById('email').focus();
+        });
+    </script>
+</body>
+</html>
