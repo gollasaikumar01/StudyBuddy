@@ -3,7 +3,7 @@ import os
 
 
 
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "AIzaSyAvdkMPbUIYo0KWBqzyJW3uJx93v_vCn6E")
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 
 client = None
 if GEMINI_API_KEY:
